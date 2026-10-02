@@ -14,13 +14,12 @@ class SkemaController extends Controller
 
     public function store(Request $request) {
         $request->validate([
-            'kode_skema' => 'required',
+            'kode_skema' => 'required|unique:skema,kode_skema',
             'nama_skema' => 'required',
         ]);
 
         Skema::create($request->all());
-
-        return redirect()->route('skema.index')->with('success', 'Skema berhasil ditambahkan!');
+        return redirect()->route('skema.index')->with('success', 'Data skema berhasil ditambahkan!');
     }
 
     public function edit($id) {
@@ -41,7 +40,8 @@ class SkemaController extends Controller
     }
 
     public function destroy($id) {
-        Skema::destroy($id);
-        return redirect()->route('skema.index')->with('success', 'Skema berhasil dihapus!');
+        $skema = Skema::findOrFail($id);
+        $skema->delete();
+        return redirect()->route('skema.index')->with('success', 'Data skema berhasil dihapus!');
     }
 }

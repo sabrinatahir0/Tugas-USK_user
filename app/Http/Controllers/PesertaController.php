@@ -22,33 +22,39 @@ class PesertaController extends Controller
             ->latest()
             ->get();
 
-        return view('skema.peserta.index', compact('peserta', 'cari'));
+        return view('peserta.index', compact('peserta', 'cari'));
     }
 
     public function create()
     {
-        $skema = Skema::all(); // Mengambil semua skema untuk dropdown select
-        return view('skema.peserta.create', compact('skema'));
+        $skema = Skema::all();
+        return view('peserta.create', compact('skema'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request) 
     {
         $request->validate([
-            'nama'     => 'required',
-            'email'    => 'required|email',
+            'nama'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:peserta,email',
             'no_hp'    => 'required',
             'skema_id' => 'required|exists:skema,id',
+        ], [
+            'nama.required'     => 'Nama peserta wajib diisi.',
+            'email.required'    => 'Email wajib diisi.',
+            'email.unique'      => 'Email ini sudah terdaftar.',
+            'no_hp.required'    => 'Nomor HP wajib diisi.',
+            'skema_id.required' => 'Pilih skema sertifikasi.',
         ]);
 
         Peserta::create($request->all());
 
-        return redirect()->route('peserta.index')->with('success', 'Peserta berhasil ditambahkan!');
+        return redirect()->route('peserta.index')->with('success', 'Data peserta berhasil ditambahkan!');
     }
 
     public function show($id)
     {
         $peserta = Peserta::with('skema')->findOrFail($id);
-        return view('skema.peserta.show', compact('peserta'));
+        return view('peserta.show', compact('peserta'));
     }
 
     public function edit($id)
@@ -56,16 +62,22 @@ class PesertaController extends Controller
         $peserta = Peserta::findOrFail($id);
         $skema = Skema::all();
         
-        return view('skema.peserta.edit', compact('peserta', 'skema'));
+        return view('peserta.edit', compact('peserta', 'skema'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama'     => 'required',
-            'email'    => 'required|email',
+            'nama'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:peserta,email,'.$id,
             'no_hp'    => 'required',
             'skema_id' => 'required|exists:skema,id',
+        ], [
+            'nama.required'     => 'Nama peserta wajib diisi.',
+            'email.required'    => 'Email wajib diisi.',
+            'email.unique'      => 'Email ini sudah terdaftar.',
+            'no_hp.required'    => 'Nomor HP wajib diisi.',
+            'skema_id.required' => 'Pilih skema sertifikasi.',
         ]);
 
         $peserta = Peserta::findOrFail($id);
@@ -74,9 +86,11 @@ class PesertaController extends Controller
         return redirect()->route('peserta.index')->with('success', 'Data peserta berhasil diperbarui!');
     }
 
-    public function destroy($id)
+    public function destroy($id) 
     {
-        Peserta::destroy($id);
-        return redirect()->route('peserta.index')->with('success', 'Peserta berhasil dihapus!');
+        $peserta = Peserta::findOrFail($id);
+        $peserta->delete();
+
+        return redirect()->route('peserta.index')->with('success', 'Data peserta berhasil dihapus!');
     }
 }
