@@ -34,15 +34,17 @@ class PesertaController extends Controller
     public function store(Request $request) 
     {
         $request->validate([
-            'nama'     => 'required|string|max:255',
+            'nama'     => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
             'email'    => 'required|email|unique:peserta,email',
-            'no_hp'    => 'required',
+            'no_hp'    => 'required|string|max:20',
             'skema_id' => 'required|exists:skema,id',
         ], [
             'nama.required'     => 'Nama peserta wajib diisi.',
+            'nama.regex'        => 'Nama peserta hanya boleh berisi huruf dan spasi (tidak boleh mengandung angka atau simbol).',
             'email.required'    => 'Email wajib diisi.',
             'email.unique'      => 'Email ini sudah terdaftar.',
             'no_hp.required'    => 'Nomor HP wajib diisi.',
+            'no_hp.max'         => 'Nomor HP tidak boleh lebih dari 20 karakter.',
             'skema_id.required' => 'Pilih skema sertifikasi.',
         ]);
 
@@ -58,32 +60,40 @@ class PesertaController extends Controller
     }
 
     public function edit($id)
-    {
-        $peserta = Peserta::findOrFail($id);
-        $skema = Skema::all();
-        
-        return view('peserta.edit', compact('peserta', 'skema'));
+{
+    $peserta = Peserta::findOrFail($id);
+    
+    // Jika bukan admin dan mencoba mengedit data orang lain, tolak!
+    if (auth()->user()->role !== 'admin' && $peserta->user_id !== auth()->id()) {
+        abort(403, 'Unauthorized action.');
     }
 
-    public function update(Request $request, $id)
+    $skema = Skema::all();
+    return view('peserta.edit', compact('peserta', 'skema'));
+}
+
+public function update(Request $request, $id)
     {
-        $request->validate([
-            'nama'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:peserta,email,'.$id,
-            'no_hp'    => 'required',
-            'skema_id' => 'required|exists:skema,id',
-        ], [
-            'nama.required'     => 'Nama peserta wajib diisi.',
-            'email.required'    => 'Email wajib diisi.',
-            'email.unique'      => 'Email ini sudah terdaftar.',
-            'no_hp.required'    => 'Nomor HP wajib diisi.',
-            'skema_id.required' => 'Pilih skema sertifikasi.',
-        ]);
+    $peserta = Peserta::findOrFail($id);
 
-        $peserta = Peserta::findOrFail($id);
-        $peserta->update($request->all());
+    // Validasi kepemilikan data
+    if (auth()->user()->role !== 'admin' && $peserta->user_id !== auth()->id()) {
+        abort(403, 'Unauthorized action.');
+    }
 
-        return redirect()->route('peserta.index')->with('success', 'Data peserta berhasil diperbarui!');
+    $request->validate([
+        'nama'     => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
+        'email'    => 'required|email|unique:peserta,email,'.$id,
+        'no_hp'    => 'required|string|max:20',
+        'skema_id' => 'required|exists:skema,id',
+    ], [
+        'nama.regex' => 'Nama peserta hanya boleh berisi huruf dan spasi.',
+        'no_hp.max'  => 'Nomor HP maksimal 20 karakter.',
+    ]);
+
+    $peserta->update($request->all());
+
+    return redirect()->route('peserta.index')->with('success', 'Data diri berhasil diperbarui!');
     }
 
     public function destroy($id) 

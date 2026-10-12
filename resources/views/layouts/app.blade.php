@@ -66,15 +66,15 @@
             </div>
         @endif
 
-        {{-- Alert Jika Ada Error Validasi Form --}}
+        {{-- Alert Jika Ada Error Validasi Form (Tanpa Titik / Bullet) --}}
         @if($errors->any())
             <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
-                <strong>Perhatian!</strong> Terdapat kesalahan input pada form:
-                <ul class="mb-0 mt-2">
+                
+                <div class="mt-2">
                     @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <div>{{ $error }}</div>
                     @endforeach
-                </ul>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif

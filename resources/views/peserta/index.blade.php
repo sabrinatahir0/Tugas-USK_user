@@ -3,7 +3,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Data Peserta Sertifikasi</h3>
-    <a href="{{ route('peserta.create') }}" class="btn btn-primary">+ Tambah Peserta</a>
+    
+    <!-- Tombol Tambah Peserta HANYA MUNCUL untuk Admin -->
+    @if(auth()->user()->role == 'admin')
+        <a href="{{ route('peserta.create') }}" class="btn btn-primary">+ Tambah Peserta</a>
+    @endif
 </div>
 
 <form method="GET" class="mb-3 d-flex gap-2">
@@ -33,12 +37,21 @@
             <td class="d-flex gap-1">
 
                 <a href="{{ route('peserta.show', $p->id) }}" class="btn btn-secondary btn-sm text-black">Detail</a>
-                <a href="{{ route('peserta.edit', $p->id) }}" class="btn btn-success btn-sm text-black">Edit</a>
-                <form action="{{ route('peserta.destroy', $p->id) }}" method="POST">
-                    @csrf 
-                    @method('DELETE')
-                    <button class="btn btn-danger btn-sm text-black" onclick="return confirm('Hapus peserta?')">Hapus</button>
-                </form>
+
+                <!-- Tombol Edit: Admin bisa edit semua, User biasa HANYA BISA EDIT miliknya sendiri -->
+                @if(auth()->user()->role == 'admin' || $p->user_id == auth()->id())
+                    <a href="{{ route('peserta.edit', $p->id) }}" class="btn btn-success btn-sm text-black">Edit</a>
+                @endif
+
+                <!-- Tombol Hapus: HANYA MUNCUL untuk Admin -->
+                @if(auth()->user()->role == 'admin')
+                    <form action="{{ route('peserta.destroy', $p->id) }}" method="POST" class="d-inline">
+                        @csrf 
+                        @method('DELETE')
+                        <button class="btn btn-danger btn-sm text-black" onclick="return confirm('Hapus peserta?')">Hapus</button>
+                    </form>
+                @endif
+
             </td>
         </tr>
         @empty
